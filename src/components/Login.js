@@ -1,43 +1,74 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Header from "./Header";
+import { checkValidData } from "../utils/validate";
 
 const Login = () => {
+  const [isSignInForm, setIsSignInForm] = useState(true);
+  const[erorMessage, setErrorMessage] = useState(null);
+  const email = useRef(null);
+  const password = useRef(null);
+  const name = useRef(null);
 
-    const [isSignInForm, setIsSignInForm] = useState(true);
-
-    const toggleSignInForm = () =>{
-        setIsSignInForm(!isSignInForm);
-    };
+  const toggleSignInForm = () => {
+    setIsSignInForm(!isSignInForm);
+  };
+  const handleButtonClick = ()=>{
+    const message = checkValidData(email.current.value, password.current.value, name.current.value);
+    setErrorMessage(message);
+  }
 
   return (
     <div>
-        <Header/>
-        <div className="absolute">
-            <img src="https://assets.nflxext.com/ffe/siteui/vlv3/a73c4363-1dcd-4719-b3b1-3725418fd91d/fe1147dd-78be-44aa-a0e5-2d2994305a13/IN-en-20231016-popsignuptwoweeks-perspective_alpha_website_small.jpg" 
-                alt="logo" />
-        </div>
-            <h1 className="font-bold text-3xl p-2 m-2 py-3">
-                    {isSignInForm ? "Sign In" : "Sign Up"}</h1>
-            
-            {!isSignInForm && 
-                    (<input type="text" placeholder="Full Name" 
-                        className="p-2 m-2 w-full bg-slate-700 rounded-md"/>
-                    )
-            }
-            <input type="text" placeholder="Email Address" 
-                className="p-2 m-2 w-full bg-slate-700 rounded-md"/>
+      <Header />
+      <div className="absolute">
+        <img
+          src="https://assets.nflxext.com/ffe/siteui/vlv3/fc164b4b-f085-44ee-bb7f-ec7df8539eff/d23a1608-7d90-4da1-93d6-bae2fe60a69b/IN-en-20230814-popsignuptwoweeks-perspective_alpha_website_large.jpg"
+          alt="logo"
+        />
+      </div>
+      <form 
+        onSubmit={(e) => e.preventDefault()}
+        className="w-4/12 absolute p-12 bg-black my-36 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80">
         
-            <input type="text" placeholder="Password" 
-                className="p-2 m-2 w-full bg-slate-700 rounded-md"/>
-            <button 
-                className="p-2 m-2 bg-red-600 w-full rounded-md"
-                    >{isSignInForm ? "Sign In" : "Sign Up"}</button>
-            <p className="p-2 m-2 py-4 cursor-pointer"
-                onClick={toggleSignInForm}
-            > {isSignInForm ? "New to Netflix? Sign Up now." : "Already registered ? Sign In now"}</p>
-        </form>
-    </div>
-  )
-};
+        <h1 className="font-bold text-3xl py-4">
+          {isSignInForm ? "Sign In" : "Sign Up"}
+        </h1>
 
+        {!isSignInForm && (
+          <input
+            ref={name}
+            type="text"
+            placeholder="Full Name"
+            className="p-4 my-4 w-full bg-gray-700"
+          />
+        )}
+        <input
+            ref={email}
+          type="text"
+          placeholder="Email Address"
+          className="p-4 my-4 w-full bg-gray-700"
+        />
+        <input
+            ref={password}
+          type="password"
+          placeholder="Password"
+          className="p-4 my-4 w-full bg-gray-700"
+        />
+
+        <p className="text-red-500 font-bold">{erorMessage}</p>
+
+        <button className="p-4 my-6 bg-red-700 w-full rounded-lg"
+            onClick={handleButtonClick}
+        >
+          {isSignInForm ? "Sign In" : "Sign Up"}
+        </button>
+        <p className="py-4 cursor-pointer" onClick={toggleSignInForm}>
+          {isSignInForm
+            ? "New to Netflix? Sign Up Now"
+            : "Already registered? Sign In Now."}
+        </p>
+      </form>
+    </div>
+  );
+};
 export default Login;

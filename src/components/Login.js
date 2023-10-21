@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 import Header from "./Header";
 import { checkValidData, checkValidData2 } from "../utils/validate";
 import { auth } from "../utils/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword} from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile} from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { addUser } from "../utils/userSlice";
 
 
 const Login = () => {
@@ -11,6 +14,8 @@ const Login = () => {
   const email = useRef(null);
   const password = useRef(null);
   const name = useRef(null);
+  const navigate = useNavigate();
+  const dispath = useDispatch();
 
   const toggleSignInForm = () => {
     setIsSignInForm(!isSignInForm);
@@ -22,11 +27,24 @@ const Login = () => {
     if(!isSignInForm){
       //sign up logic
         const message = checkValidData2(email.current.value, password.current.value, name.current.value);
-        setErrorMessage(message);
+        // setErrorMessage(message);
         createUserWithEmailAndPassword(auth, email.current.value, password.current.value)
           .then((userCredential) => {
             // Signed up 
             const user = userCredential.user;
+
+            updateProfile(user, {
+              displayName: name.current.value, photoURL:"https://th.bing.com/th/id/R.6b0022312d41080436c52da571d5c697?rik=Ql6UUNosrWAY0w&riu=http%3a%2f%2fpluspng.com%2fimg-png%2fpng-user-icon-icons-logos-emojis-users-2400.png&ehk=8agkVrs8bo9zafVF9Qk4%2bFqv5IwaEZrb8DwX%2ftfJtNc%3d&risl=&pid=ImgRaw&r=0"
+            }).then(() => {
+              // Profile updated!
+              // and navigate
+              const {uid, email, displayName, photoURL} = auth.currentUser;
+              dispath(addUser({uid: uid, email:email, displayName:displayName, photoURL:photoURL}));;
+              navigate("/browse");
+            }).catch((error) => {
+              // An error occurred
+              setErrorMessage(error);
+            });
           })
           .catch((error) => {
             const errorCode = error.code;
@@ -37,13 +55,13 @@ const Login = () => {
     }
     else{
       const message = checkValidData(email.current.value, password.current.value);
-        setErrorMessage(message);
+        // setErrorMessage(message);
       //sign in logic
       signInWithEmailAndPassword(auth, email.current.value, password.current.value)
       .then((userCredential) => {
         // Signed in 
         const user = userCredential.user;
-        console.log(user);
+        navigate("/browse");
       })
       .catch((error) => {
         const errorCode = error.code;

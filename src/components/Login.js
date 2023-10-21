@@ -5,6 +5,7 @@ import { auth } from "../utils/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile} from "firebase/auth";
 import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
+import { USER_AVATAR } from "../utils/contants";
 
 
 const Login = () => {
@@ -32,7 +33,7 @@ const Login = () => {
             const user = userCredential.user;
 
             updateProfile(user, {
-              displayName: name.current.value, photoURL:"https://th.bing.com/th/id/R.6b0022312d41080436c52da571d5c697?rik=Ql6UUNosrWAY0w&riu=http%3a%2f%2fpluspng.com%2fimg-png%2fpng-user-icon-icons-logos-emojis-users-2400.png&ehk=8agkVrs8bo9zafVF9Qk4%2bFqv5IwaEZrb8DwX%2ftfJtNc%3d&risl=&pid=ImgRaw&r=0"
+              displayName: name.current.value, photoURL:USER_AVATAR
             }).then(() => {
               // Profile updated!
               // and navigate

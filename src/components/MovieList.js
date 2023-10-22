@@ -2,7 +2,7 @@ import MovieCard from "./MovieCard"
 
 
 const MovieList = ({title, movies}) => {
-    console.log(movies);
+    // console.log(movies);
     if(movies === null) return;
   return (
     <div className="px-6">
@@ -19,6 +19,6 @@ const MovieList = ({title, movies}) => {
         </div>
     </div>
   )
-}
+};
 
-export default MovieList
+export default MovieList;

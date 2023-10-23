@@ -13,7 +13,7 @@ const GPTSearchBar = () => {
 
   //search movie in tmdb
   const searchMovieTMDB = async (movie)=>{
-    const data = await fetch("https://api.themoviedb.org/3/search/movie?" + movie +"&include_adult=false&language=en-US&page=1", API_OPTIONS);
+    const data = await fetch("https://api.themoviedb.org/3/search/movie?query=" + movie +"&include_adult=false&language=en-US&page=1", API_OPTIONS);
     const json = await data.json();
     return json.results;
   };
@@ -29,9 +29,11 @@ const GPTSearchBar = () => {
     console.log(gptResults.choices);
 
     const gptMovies = gptResults.choices?.[0]?.message?.content.split(",");
+    console.log(gptMovies);
 
     const data = gptMovies.map(movie => searchMovieTMDB(movie));
     const tmdbResults = await Promise.all(data);
+    console.log(tmdbResults);
     dispath(addGptMovieResult({movieNames: gptMovies, movieResults: tmdbResults}));
   };
 

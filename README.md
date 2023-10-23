@@ -1,4 +1,4 @@
 #Netflix-GPT
---Created React App
---Configured TailwindCSS
---
+https://github.com/arpitsinh-thakor/NETFLIX-GPT
+
+LIVE -> https://netflix-gpt-d9a3d.web.app/

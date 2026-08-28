@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { useRef } from "react";
-import openai from "../utils/openai";
+import gemini from "../utils/gemini";
 import { API_OPTIONS, OPENAI_KEY } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { addGptMovieResult } from "../utils/gptSlice";
@@ -9,7 +9,7 @@ import { addGptMovieResult } from "../utils/gptSlice";
 const GPTSearchBar = () => {
 
   const searchText = useRef(null);
-  const dispath = useDispatch();
+  const dispatch = useDispatch();
 
   //search movie in tmdb
   const searchMovieTMDB = async (movie)=>{
@@ -19,23 +19,46 @@ const GPTSearchBar = () => {
   };
   
   const handleGptSearchClick = async () => {
-    const gptQuery = "Act as a movie recommendation system and suggest some movies for they query :"
-                     + searchText.current.value 
-                    + ". , Only give 5 movies, comma separated like the example result given ahead. Example result: Gadar, Sholay, Don, Gomaal, Koi mil gaya";
-    const gptResults = await openai.chat.completions.create({
-      messages: [{ role: 'user', content: gptQuery}],
-      model: 'gpt-3.5-turbo',
+  try {
+    const gptQuery =
+      "Act as a movie recommendation system and suggest some movies for the query: " +
+      searchText.current.value +
+      ". Only give 5 movies, comma separated like the example result given ahead. " +
+      "Example result: Gadar, Sholay, Don, Gomaal, Koi mil gaya";
+
+    const interaction = await gemini.interactions.create({
+      model: "gemini-3.6-flash",
+      input: gptQuery,
     });
-    console.log(gptResults.choices);
 
-    const gptMovies = gptResults.choices?.[0]?.message?.content.split(",");
-    console.log(gptMovies);
+    console.log("Gemini response:", interaction.output_text);
 
-    const data = gptMovies.map(movie => searchMovieTMDB(movie));
+    const gptMovies = interaction.output_text
+      .split(",")
+      .map((movie) => movie.trim())
+      .filter((movie) => movie.length > 0)
+      .slice(0, 5);
+
+    console.log("Movies:", gptMovies);
+
+    const data = gptMovies.map((movie) =>
+      searchMovieTMDB(movie)
+    );
+
     const tmdbResults = await Promise.all(data);
-    console.log(tmdbResults);
-    dispath(addGptMovieResult({movieNames: gptMovies, movieResults: tmdbResults}));
-  };
+
+    console.log("TMDB Results:", tmdbResults);
+
+    dispatch(
+      addGptMovieResult({
+        movieNames: gptMovies,
+        movieResults: tmdbResults,
+      })
+    );
+  } catch (error) {
+    console.error("Gemini API Error:", error);
+  }
+};
 
   return (
     <div className="pt-[7%] flex justify-center">

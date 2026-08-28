@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { useRef } from "react";
-import { GoogleGenAI } from "@google/genai";
+
 import { API_OPTIONS, OPENAI_KEY } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { addGptMovieResult } from "../utils/gptSlice";

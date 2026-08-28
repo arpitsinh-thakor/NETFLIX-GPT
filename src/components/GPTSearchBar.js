@@ -1,91 +1,168 @@
-import OpenAI from "openai";
 import { useRef } from "react";
-
-import { API_OPTIONS, OPENAI_KEY } from "../utils/constants";
 import { useDispatch } from "react-redux";
 import { addGptMovieResult } from "../utils/gptSlice";
 
-
 const GPTSearchBar = () => {
-
   const searchText = useRef(null);
   const dispatch = useDispatch();
 
-  //search movie in tmdb
-  const searchMovieTMDB = async (movie)=>{
-    const data = await fetch("https://api.themoviedb.org/3/search/movie?query=" + movie +"&include_adult=false&language=en-US&page=1", API_OPTIONS);
-    const json = await data.json();
-    return json.results;
-  };
-  
-  const handleGptSearchClick = async () => {
-  try {
-    const gptQuery =
-      "Act as a movie recommendation system and suggest some movies for the query: " +
-      searchText.current.value +
-      ". Only give 5 movies, comma separated like the example result given ahead. " +
-      "Example result: Gadar, Sholay, Don, Gomaal, Koi mil gaya";
+  // Search movie through our backend -> TMDB
+  const searchMovieTMDB = async (movie) => {
+    try {
+      const response = await fetch(
+        `/api/tmdb?type=search&query=${encodeURIComponent(movie)}`
+      );
 
-    const response = await fetch("/api/gemini", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt: gptQuery,
-      }),
-    });
+      const json = await response.json();
 
-    const data = await response.json();
+      if (!response.ok) {
+        console.error("TMDB Search Error:", json);
+        return [];
+      }
 
-    if (!response.ok) {
-      throw new Error(data.error || "Gemini API request failed");
+      return json.results || [];
+    } catch (error) {
+      console.error("TMDB Fetch Error:", error);
+      return [];
     }
+  };
 
-    console.log("Gemini response:", data.text);
+  const handleGptSearchClick = async () => {
+    const query = searchText.current?.value?.trim();
 
-    const gptMovies = data.text
-      .split(",")
-      .map((movie) => movie.trim())
-      .filter((movie) => movie.length > 0)
-      .slice(0, 5);
+    if (!query) return;
 
-    console.log("Movies:", gptMovies);
+    try {
+      // -----------------------------
+      // 1. Ask Gemini for movies
+      // -----------------------------
 
-    const tmdbRequests = gptMovies.map((movie) =>
-      searchMovieTMDB(movie)
-    );
+      const gptQuery =
+        "Act as a movie recommendation system and suggest some movies for the query: " +
+        query +
+        ". Only give 5 movies, comma separated. " +
+        "Do not add numbering, explanations, or extra text. " +
+        "Example: Gadar, Sholay, Don, Gomaal, Koi Mil Gaya";
 
-    const tmdbResults = await Promise.all(tmdbRequests);
+      const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: gptQuery,
+        }),
+      });
 
-    console.log("TMDB Results:", tmdbResults);
+      const data = await response.json();
 
-    dispatch(
-      addGptMovieResult({
-        movieNames: gptMovies,
-        movieResults: tmdbResults,
-      })
-    );
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-  }
-};
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Gemini API request failed"
+        );
+      }
+
+      console.log("Gemini response:", data.text);
+
+      // -----------------------------
+      // 2. Extract movie names
+      // -----------------------------
+
+      const gptMovies = data.text
+        .split(",")
+        .map((movie) => movie.trim())
+        .filter(Boolean)
+        .slice(0, 5);
+
+      console.log("Movies:", gptMovies);
+
+      if (gptMovies.length === 0) {
+        console.log("No movies returned by Gemini");
+        return;
+      }
+
+      // -----------------------------
+      // 3. Search movies in TMDB
+      // -----------------------------
+
+      const tmdbResults = await Promise.all(
+        gptMovies.map((movie) => searchMovieTMDB(movie))
+      );
+
+      console.log("TMDB Results:", tmdbResults);
+
+      // -----------------------------
+      // 4. Store results in Redux
+      // -----------------------------
+
+      dispatch(
+        addGptMovieResult({
+          movieNames: gptMovies,
+          movieResults: tmdbResults,
+        })
+      );
+
+      console.log("Redux updated");
+    } catch (error) {
+      console.error("GPT Search Error:", error);
+    }
+  };
 
   return (
-    <div className="pt-[7%] flex justify-center">
-        <form className="w-1/2 bg-black grid grid-cols-12 rounded-lg"
-                onSubmit={(e) => e.preventDefault()}>
-            <input 
-                ref={searchText}
-                type="text"  
-                className="p-3 m-2 col-span-9 rounded-lg" placeholder="What would you like to watch today ?" />
-            <button 
-                className="col-span-3 m-2 py-2 px-4 bg-red-500 text-white rounded-lg"
-                onClick={handleGptSearchClick}
-                >Search</button>
-        </form>
-    </div>
-  )
-}
+    <div className="flex justify-center px-4 pt-[20%] sm:pt-[12%] md:pt-[8%]">
+      <form
+        className="
+          grid
+          w-full
+          max-w-2xl
+          grid-cols-12
+          overflow-hidden
+          rounded-lg
+          bg-black/80
+          shadow-xl
+        "
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleGptSearchClick();
+        }}
+      >
+        <input
+          ref={searchText}
+          type="text"
+          className="
+            col-span-9
+            m-2
+            rounded-lg
+            bg-white
+            p-3
+            text-black
+            outline-none
+          "
+          placeholder="What would you like to watch today?"
+        />
 
-export default GPTSearchBar
+        <button
+          type="submit"
+          className="
+            col-span-3
+            m-2
+            rounded-lg
+            bg-red-600
+            px-4
+            py-2
+            font-semibold
+            text-white
+            transition-all
+            duration-300
+            hover:bg-red-700
+            active:scale-95
+          "
+        >
+          Search
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default GPTSearchBar;

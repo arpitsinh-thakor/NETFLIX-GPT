@@ -12,10 +12,7 @@ const useNowPlayingMovies = () => {
 
   const getNowPlayingMovies = useCallback(async () => {
     try {
-      const data = await fetch(
-        "https://api.themoviedb.org/3/movie/now_playing?page=1",
-        API_OPTIONS
-      );
+       const data = await fetch("/api/tmdb");
 
       const json = await data.json();
 

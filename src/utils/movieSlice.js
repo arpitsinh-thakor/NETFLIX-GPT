@@ -4,7 +4,10 @@ import { createSlice } from "@reduxjs/toolkit";
 const movieSlice = createSlice({
     name: "movies",
     initialState: {
-        addNowPlayingMovies: null,
+        nowPlayingMovies: null,
+        popularMovies: null,
+        topRatedMovies: null,
+        upcomingMovies: null,
         trailerVideo: null,
     },
     reducers:{

@@ -1,5 +1,4 @@
 import { useEffect, useCallback } from "react";
-import { API_OPTIONS } from "../utils/constants";
 import { useDispatch, useSelector } from "react-redux";
 import { addNowPlayingMovies } from "../utils/movieSlice";
 
@@ -12,11 +11,11 @@ const useNowPlayingMovies = () => {
 
   const getNowPlayingMovies = useCallback(async () => {
     try {
-       const data = await fetch("/api/tmdb");
+      const response = await fetch("/api/tmdb");
 
-      const json = await data.json();
+      const json = await response.json();
 
-      if (!data.ok) {
+      if (!response.ok) {
         console.error("TMDB Error:", json);
         return;
       }

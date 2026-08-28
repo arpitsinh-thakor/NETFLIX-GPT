@@ -26,14 +26,25 @@ const GPTSearchBar = () => {
       ". Only give 5 movies, comma separated like the example result given ahead. " +
       "Example result: Gadar, Sholay, Don, Gomaal, Koi mil gaya";
 
-    const interaction = await gemini.interactions.create({
-      model: "gemini-3.6-flash",
-      input: gptQuery,
+    const response = await fetch("/api/gemini", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        prompt: gptQuery,
+      }),
     });
 
-    console.log("Gemini response:", interaction.output_text);
+    const data = await response.json();
 
-    const gptMovies = interaction.output_text
+    if (!response.ok) {
+      throw new Error(data.error || "Gemini API request failed");
+    }
+
+    console.log("Gemini response:", data.text);
+
+    const gptMovies = data.text
       .split(",")
       .map((movie) => movie.trim())
       .filter((movie) => movie.length > 0)
@@ -41,11 +52,11 @@ const GPTSearchBar = () => {
 
     console.log("Movies:", gptMovies);
 
-    const data = gptMovies.map((movie) =>
+    const tmdbRequests = gptMovies.map((movie) =>
       searchMovieTMDB(movie)
     );
 
-    const tmdbResults = await Promise.all(data);
+    const tmdbResults = await Promise.all(tmdbRequests);
 
     console.log("TMDB Results:", tmdbResults);
 

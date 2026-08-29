@@ -1,9 +1,7 @@
 {
   "functions": {
     "api/**/*.js": {
-      "includeFiles": [
-        "node_modules/@google/genai/**"
-      ]
+      "includeFiles": "node_modules/@google/genai/**"
     }
   }
 }

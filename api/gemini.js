@@ -16,17 +16,23 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!process.env.GEMINI_KEY) {
+      return res.status(500).json({
+        error: "GEMINI_KEY is missing on Vercel",
+      });
+    }
+
     const ai = new GoogleGenAI({
       apiKey: process.env.GEMINI_KEY,
     });
 
-    const interaction = await ai.interactions.create({
-      model: "gemini-3.6-flash",
-      input: prompt,
+    const response = await ai.models.generateContent({
+      model: "gemini-3.7-flash",
+      contents: prompt,
     });
 
     return res.status(200).json({
-      text: interaction.output_text,
+      text: response.text,
     });
   } catch (error) {
     console.error("Gemini API Error:", error);
@@ -36,12 +42,3 @@ export default async function handler(req, res) {
     });
   }
 }
-// export default function handler(req, res) {
-//   console.log("Gemini function called");
-
-//   return res.status(200).json({
-//     success: true,
-//     hasKey: !!process.env.GEMINI_API_KEY,
-//     message: "Vercel API is working",
-//   });
-// }
